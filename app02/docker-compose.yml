@@ -1,0 +1,80 @@
+version: '3'
+services:
+  db:
+    image: mariadb:10
+    volumes:
+    ##
+    # Ajoutez un volume pour MariaDB data (répertoire /var/lib/mysql)
+    ##
+    - mariadb_data:/var/lib/mysql
+    ##
+    restart: always
+    environment:
+    ##
+    # Ajoutez les variables d'environnement pour accès à la base MariaDB
+    ##
+    - MYSQL_ROOT_PASSWORD=1234
+    - MYSQL_DATABASE=wordpress
+    - MYSQL_USER=wordpress
+    - MYSQL_PASSWORD=1234
+    networks:
+    - wordpress_network
+
+  dbadmin:
+    image: phpmyadmin/phpmyadmin
+
+    ports:
+    - "8080:80"
+    
+    environment:
+    ##
+    # Ajoutez les variables d'environnement pour MariaDB+PHPMyAdmin
+    ##
+      PMA_HOST: db
+      PMA_PORT: 3306
+      MYSQL_ROOT_PASSWORD: rootpassword
+
+    depends_on:
+    ##
+    # Ajouter les dépendances
+    ##
+    - db
+    networks:
+    - wordpress_network
+
+  wordpress:
+    image: wordpress:latest
+
+    depends_on:
+    ##
+    # Ajouter les dépendances
+    ##
+    - db
+
+    networks:
+    - wordpress_network
+
+    ports:
+    - "8081:80"
+
+    restart: always
+
+    environment:
+    ##
+    # Ajoutez les variables d'environnement pour accéder à la base de données MariaDB
+    - WORDPRESS_DB_HOST=db:3306
+    - WORDPRESS_DB_USER=wordpress
+    - WORDPRESS_DB_PASSWORD=1234
+    - WORDPRESS_DB_NAME=wordpress
+
+    volumes:
+      - wordpress_data:/var/www/html
+
+volumes:
+  mariadb_data:
+  wordpress_data:
+
+networks:
+  wordpress_network:
+    driver: bridge
+
